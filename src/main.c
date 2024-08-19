@@ -27,6 +27,17 @@ void printTasks(Task tasks[], int taskCount, int selectedTask) {
   }
 }
 
+void deleteTask(Task tasks[], int *taskCount, int selectedTask) {
+  if(*taskCount <= 0) {
+    return;
+  }
+
+  for (int i = selectedTask; i < *taskCount; i++) {
+    tasks[i] = tasks[i + 1];
+  }
+  (*taskCount)--;
+}
+
 int compareTasks(const void *a, const void *b) {
   Task *taskA = (Task *)a;
   Task *taskB = (Task *)b;
@@ -38,6 +49,7 @@ int main() {
   int ch;
   int taskCount = 0;
   int selectedTask = 0;
+  int row;
   bool quit = false;
 
   initscr();
@@ -52,7 +64,6 @@ int main() {
   tasks[2].done = true;
   taskCount = 3;
 
-  qsort(tasks, taskCount, sizeof(Task), compareTasks);
 
   while(!quit) {
     clear();
@@ -61,6 +72,12 @@ int main() {
     printw("Task Manager\n");
     attroff(A_BOLD);
     printTasks(tasks, taskCount, selectedTask);
+    row = getmaxy(stdscr);
+
+    move(row - 1, 0);
+    printw("Press 'q' to quit and 'a' to add task");
+
+    qsort(tasks, taskCount, sizeof(Task), compareTasks);
 
     ch = getch();
     switch (ch) {
@@ -81,6 +98,13 @@ int main() {
         break;
       case '\n':
         tasks[selectedTask].done = !tasks[selectedTask].done;
+        break;
+      case KEY_DC:
+        deleteTask(tasks, &taskCount, selectedTask);
+        if (selectedTask >= taskCount) {
+          selectedTask = taskCount - 1; // Adjust selectedTask if needed
+        }
+        break;
     }
 
   }
