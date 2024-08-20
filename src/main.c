@@ -105,7 +105,7 @@ int main() {
     printTasks();
 
     move(row - 1, 0);
-    printw("Press 'q' to quit, 'a' to add task and 'd' to delete");
+    printw("Press 'q' to quit, 'enter' to mark task as done, 'a' to add task and 'd' to delete");
 
     ch = getch();
     switch (ch) {
