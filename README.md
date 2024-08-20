@@ -1,5 +1,5 @@
 # todolist
-![Screenshot](.assets/screenshot.png)
+![Screenshot](screenshot.png)
 A simple command-line task manager built using the `ncurses` library in C.
 
 ## Features
