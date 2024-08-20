@@ -40,6 +40,7 @@ void addTask() {
   int row = getmaxy(stdscr);
   mvprintw(row - 2, 0, "Enter task description: ");
   getnstr(newTask, 256);
+  //Check if description is empty
   if (strlen(newTask) == 0 || strspn(newTask, " \t\n") == strlen(newTask)) {
     noecho();
     return;
@@ -79,11 +80,17 @@ int main() {
   noecho();
   init_pair(1, COLOR_GREEN, COLOR_BLACK);
 
+  // Example tasks
   strcpy(tasks[0].description, "Do laundry");
   strcpy(tasks[1].description, "Clean room");
   strcpy(tasks[2].description, "Buy groceries");
+  strcpy(tasks[3].description, "Finish homework");
+  strcpy(tasks[4].description, "Read a book");
+  strcpy(tasks[5].description, "Go for a walk");
+  strcpy(tasks[6].description, "Prepare dinner");
   tasks[2].done = true;
-  taskCount = 3;
+  tasks[5].done = true;
+  taskCount = 7;
 
   while(!quit) {
     clear();
