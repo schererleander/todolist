@@ -98,7 +98,7 @@ int main() {
 
     move(0,0);
     attron(A_BOLD);
-    printw("Task Manager");
+    printw("Todolist");
     attroff(A_BOLD);
     keypad(stdscr, TRUE);
 
