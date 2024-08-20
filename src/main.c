@@ -5,22 +5,28 @@
 #include <stdbool.h>
 
 #define MAX_TASKS 256
-#define DEBUG true
 
 typedef struct {
   char description[256];
   bool done;
 } Task;
 
-void printTasks(Task tasks[], int taskCount, int selectedTask) {
+Task tasks[MAX_TASKS];
+int taskCount = 0;
+int selectedTask = 0;
+
+void printTasks() {
+  move(1,0);
   for (int i = 0; i < taskCount; i++) {
     if (i == selectedTask) {
       attron(A_REVERSE);
     }
-    if(!tasks[i].done) {
-      printw("%s\n", tasks[i].description);
-    } else {
-      printw("✓ %s\n", tasks[i].description);
+    if (tasks[i].done) {
+      attron(COLOR_PAIR(1) | A_BOLD);
+    }
+    printw("%s\n", tasks[i].description);
+    if (tasks[i].done) {
+      attroff(COLOR_PAIR(1) | A_BOLD);
     }
     if (i == selectedTask) {
       attroff(A_REVERSE);
@@ -28,18 +34,50 @@ void printTasks(Task tasks[], int taskCount, int selectedTask) {
   }
 }
 
+void addTask() {
+  echo();
+  char newTask[256];
+  int row = getmaxy(stdscr);
+  mvprintw(row - 2, 0, "Enter task description: ");
+  getnstr(newTask, 256);
+  if (strlen(newTask) == 0 || strspn(newTask, " \t\n") == strlen(newTask)) {
+    noecho();
+    return;
+  }
+  if (taskCount < MAX_TASKS) {
+    strcpy(tasks[taskCount].description, newTask);
+    tasks[taskCount].done = false;
+    taskCount++;
+  }
+  noecho();
+
+  if(selectedTask < 0) {
+    selectedTask = 0;
+  }
+}
+
+void removeTask() {
+  if (taskCount <= 0) {
+    return;
+  }
+  for (int i = selectedTask; i < taskCount - 1; i++) {
+    tasks[i] = tasks[i + 1];
+  }
+  taskCount--;
+  if (selectedTask >= taskCount) {
+    selectedTask = taskCount - 1;
+  }
+}
+
 int main() {
-  Task tasks[MAX_TASKS];
   int ch;
-  int taskCount = 0;
-  int selectedTask = 0;
   bool quit = false;
 
   initscr();
   cbreak();
+  start_color();
   noecho();
-  setlocale(LC_CTYPE, "");
-  keypad(stdscr, TRUE);
+  init_pair(1, COLOR_GREEN, COLOR_BLACK);
 
   strcpy(tasks[0].description, "Do laundry");
   strcpy(tasks[1].description, "Clean room");
@@ -50,25 +88,17 @@ int main() {
   while(!quit) {
     clear();
     int row = getmaxy(stdscr);
+
     move(0,0);
     attron(A_BOLD);
-    printw("Task Manager\n");
+    printw("Task Manager");
     attroff(A_BOLD);
-    printTasks(tasks, taskCount, selectedTask);
+    keypad(stdscr, TRUE);
 
-    if(DEBUG) {
-      move(row - 4, 0);
-      printw("Selected task: %i", selectedTask);
-      move(row - 3, 0);
-      printw("Task Count: %i", taskCount);
-    }
+    printTasks();
 
     move(row - 1, 0);
-    printw("Press 'q' to quit, 'a' to add task and 'd' to delte task");
-
-       if (selectedTask < 0) {
-      selectedTask = 0;
-    }
+    printw("Press 'q' to quit, 'a' to add task and 'd' to delete");
 
     ch = getch();
     switch (ch) {
@@ -89,30 +119,10 @@ int main() {
         tasks[selectedTask].done = !tasks[selectedTask].done;
         break;
       case 'd':
-        if (taskCount <= 0) {
-          break;
-        }
-        for (int i = selectedTask; i < taskCount; i++) {
-          tasks[i] = tasks[i + 1];
-        }
-        taskCount--;
-        if (selectedTask >= taskCount) {
-          selectedTask = taskCount - 1; // Adjust selectedTask if needed
-        }
+        removeTask();
         break;
       case 'a':
-        echo();
-        char newTask[256];
-        mvprintw(row -2, 0, "Enter task description: ");
-        getnstr(newTask, 256);
-        if (strlen(newTask) == 0 || strspn(newTask, " \t\n") == strlen(newTask)) {
-          break;
-        }
-        if (taskCount < MAX_TASKS) {
-          strcpy(tasks[taskCount].description, newTask);
-          taskCount++;
-        }
-        noecho();
+        addTask();
         break;
     }
 
