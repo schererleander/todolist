@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #define MAX_TASKS 256
+#define DEBUG true
 
 typedef struct {
   char description[256];
@@ -27,29 +28,11 @@ void printTasks(Task tasks[], int taskCount, int selectedTask) {
   }
 }
 
-void deleteTask(Task tasks[], int *taskCount, int selectedTask) {
-  if(*taskCount <= 0) {
-    return;
-  }
-
-  for (int i = selectedTask; i < *taskCount; i++) {
-    tasks[i] = tasks[i + 1];
-  }
-  (*taskCount)--;
-}
-
-int compareTasks(const void *a, const void *b) {
-  Task *taskA = (Task *)a;
-  Task *taskB = (Task *)b;
-  return (taskA->done - taskB->done);
-}
-
 int main() {
   Task tasks[MAX_TASKS];
   int ch;
   int taskCount = 0;
   int selectedTask = 0;
-  int row;
   bool quit = false;
 
   initscr();
@@ -64,20 +47,28 @@ int main() {
   tasks[2].done = true;
   taskCount = 3;
 
-
   while(!quit) {
     clear();
+    int row = getmaxy(stdscr);
     move(0,0);
     attron(A_BOLD);
     printw("Task Manager\n");
     attroff(A_BOLD);
     printTasks(tasks, taskCount, selectedTask);
-    row = getmaxy(stdscr);
+
+    if(DEBUG) {
+      move(row - 4, 0);
+      printw("Selected task: %i", selectedTask);
+      move(row - 3, 0);
+      printw("Task Count: %i", taskCount);
+    }
 
     move(row - 1, 0);
-    printw("Press 'q' to quit and 'a' to add task");
+    printw("Press 'q' to quit, 'a' to add task and 'd' to delte task");
 
-    qsort(tasks, taskCount, sizeof(Task), compareTasks);
+       if (selectedTask < 0) {
+      selectedTask = 0;
+    }
 
     ch = getch();
     switch (ch) {
@@ -85,25 +76,43 @@ int main() {
         quit = true;
         break;
       case KEY_UP:
-        selectedTask--;
-        if (selectedTask < 0) {
-          selectedTask = 0;
+        if (selectedTask > 0) {
+          selectedTask--;
         }
         break;
       case KEY_DOWN:
-        selectedTask++;
-        if (selectedTask > taskCount) {
-          selectedTask = taskCount;
+        if (selectedTask < taskCount - 1) {
+          selectedTask++;
         }
         break;
       case '\n':
         tasks[selectedTask].done = !tasks[selectedTask].done;
         break;
-      case KEY_DC:
-        deleteTask(tasks, &taskCount, selectedTask);
+      case 'd':
+        if (taskCount <= 0) {
+          break;
+        }
+        for (int i = selectedTask; i < taskCount; i++) {
+          tasks[i] = tasks[i + 1];
+        }
+        taskCount--;
         if (selectedTask >= taskCount) {
           selectedTask = taskCount - 1; // Adjust selectedTask if needed
         }
+        break;
+      case 'a':
+        echo();
+        char newTask[256];
+        mvprintw(row -2, 0, "Enter task description: ");
+        getnstr(newTask, 256);
+        if (strlen(newTask) == 0 || strspn(newTask, " \t\n") == strlen(newTask)) {
+          break;
+        }
+        if (taskCount < MAX_TASKS) {
+          strcpy(tasks[taskCount].description, newTask);
+          taskCount++;
+        }
+        noecho();
         break;
     }
 
